@@ -3,9 +3,9 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-    "start": "node dist/index",
+    "start": "node dist/server",
     "build": "tsc -p .",
-    "dev": "tsc-watch --onSuccess \"node dist/index.js\""
+    "dev": "tsc-watch --onSuccess \"node dist/server.js\""
   },
     "devDependencies": {
         "tsc-watch": "^6.2.0",
