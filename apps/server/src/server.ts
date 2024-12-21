@@ -1,6 +1,10 @@
+import env from "dotenv";
 import express from "express";
 import { Server } from "socket.io";
 import { createServer } from "http";
+import { Publisher, Subscriber } from "./utils/redis";
+
+env.config();
 
 const app = express();
 const httpServer = createServer(app);
@@ -8,7 +12,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer);
 
 app.get("/", (req, res) => {
-  res.send("Socket.IO server is running");
+  res.send("Socket server is running");
 });
 
 io.on("connection", (socket) => {
@@ -19,12 +23,28 @@ io.on("connection", (socket) => {
   });
 
   socket.on("message", (data) => {
+    Publisher.publish("messages", JSON.stringify(data));
     console.log("Received message:", data);
-    io.emit("message", data);
   });
 });
 
-const PORT = 4000;
+Subscriber.subscribe("messages", (err, count) => {
+  if (err) {
+    console.error("Error subscribing to Redis:", err);
+  } else {
+    console.log(`Subscribed to ${count} channel(s)`);
+  }
+});
+
+Subscriber.on("message", (channel, message) => {
+  if (channel === "messages") {
+    console.log("Message received from Redis:", message);
+    io.emit("message", JSON.parse(message));
+  }
+});
+
+const PORT = process.env.PORT;
+
 httpServer.listen(PORT, () => {
   console.log(`Server running at:`);
   console.log(`- HTTP URL: http://localhost:${PORT}`);

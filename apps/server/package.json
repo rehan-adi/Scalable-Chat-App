@@ -13,7 +13,9 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "dotenv": "^16.4.7",
     "express": "^4.19.2",
+    "ioredis": "^5.4.2",
     "socket.io": "^4.8.1"
   }
 }
