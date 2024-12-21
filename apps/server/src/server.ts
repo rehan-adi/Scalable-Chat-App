@@ -1,18 +1,32 @@
-import http from "http";
-import express, { Request, Response } from "express";
+import express from "express";
+import { Server } from "socket.io";
+import { createServer } from "http";
 
-const init = () => {
-  const app = express();
-  const server = http.createServer(app);
-  const port = process.env.PORT || 4000;
+const app = express();
+const httpServer = createServer(app);
 
-  app.get("/", (req: Request, res: Response) => {
-    res.json({ success: true, message: "OK" });
+const io = new Server(httpServer);
+
+app.get("/", (req, res) => {
+  res.send("Socket.IO server is running");
+});
+
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
   });
 
-  server.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+  socket.on("message", (data) => {
+    console.log("Received message:", data);
+    io.emit("message", data);
   });
-};
+});
 
-init();
+const PORT = 4000;
+httpServer.listen(PORT, () => {
+  console.log(`Server running at:`);
+  console.log(`- HTTP URL: http://localhost:${PORT}`);
+  console.log(`- Socket.IO URL: ws://localhost:${PORT}`);
+});
