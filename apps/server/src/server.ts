@@ -1,3 +1,4 @@
+import cors from "cors";
 import env from "dotenv";
 import express from "express";
 import { Server } from "socket.io";
@@ -11,6 +12,13 @@ const app = express();
 const httpServer = createServer(app);
 
 const io = new Server(httpServer);
+
+app.use(
+  cors({
+    origin: "*",
+  })
+);
+app.use(express.json());
 
 // Health check route
 app.get("/", (req, res) => {
