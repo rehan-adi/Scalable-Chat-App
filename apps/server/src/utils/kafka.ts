@@ -1,3 +1,4 @@
+import prisma from "./prisma";
 import { Kafka, Producer } from "kafkajs";
 
 const kafka = new Kafka({
@@ -29,7 +30,7 @@ export const KafkaProducer = async (message: string) => {
     messages: [{ key: `message-${Date.now()}`, value: message }],
     topic: "MESSAGES",
   });
-  console.log(`Message sent: ${message}`);
+  console.log(`Message sent to kafka topic: ${message}`);
 };
 
 export const KafkaConsumer = async () => {
@@ -41,6 +42,9 @@ export const KafkaConsumer = async () => {
   await consumer.run({
     eachMessage: async ({ message }) => {
       if (!message.value) return;
+      await prisma.message.create({
+        data: JSON.parse(message.value.toString()),
+      })
       console.log(`Received message: ${message.value.toString()}`);
     },
   });
