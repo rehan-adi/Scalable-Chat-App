@@ -18,6 +18,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.19.2",
     "ioredis": "^5.4.2",
+    "kafkajs": "^2.2.4",
     "socket.io": "^4.8.1"
   }
 }

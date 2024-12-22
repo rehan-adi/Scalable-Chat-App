@@ -2,6 +2,7 @@ import env from "dotenv";
 import express from "express";
 import { Server } from "socket.io";
 import { createServer } from "http";
+import { KafkaProducer } from "./utils/kafka";
 import { Publisher, Subscriber } from "./utils/redis";
 
 env.config();
@@ -22,8 +23,9 @@ io.on("connection", (socket) => {
     console.log("User disconnected:", socket.id);
   });
 
-  socket.on("message", (data) => {
+  socket.on("message", async (data) => {
     Publisher.publish("messages", JSON.stringify(data));
+    await KafkaProducer(data.message);
     console.log("Received message:", data);
   });
 });
