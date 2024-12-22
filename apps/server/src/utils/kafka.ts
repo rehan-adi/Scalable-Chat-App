@@ -25,7 +25,7 @@ export async function createProducer() {
 
 export const KafkaProducer = async (message: string) => {
   const producer = await createProducer();
-  
+
   await producer.send({
     messages: [{ key: `message-${Date.now()}`, value: message }],
     topic: "MESSAGES",
@@ -40,12 +40,19 @@ export const KafkaConsumer = async () => {
   await consumer.subscribe({ topic: "MESSAGES", fromBeginning: true });
 
   await consumer.run({
+    autoCommit: true,
     eachMessage: async ({ message }) => {
       if (!message.value) return;
-      await prisma.message.create({
-        data: JSON.parse(message.value.toString()),
-      })
-      console.log(`Received message: ${message.value.toString()}`);
+      try {
+        await prisma.message.create({
+          data: {
+            message: message.value?.toString(),
+          },
+        });
+        console.log("Message added successfully to the database");
+      } catch (error) {
+        console.log("Failed to add message");
+      }
     },
   });
 };
