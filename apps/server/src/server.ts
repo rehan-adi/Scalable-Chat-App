@@ -2,8 +2,8 @@ import env from "dotenv";
 import express from "express";
 import { Server } from "socket.io";
 import { createServer } from "http";
-import { KafkaProducer } from "./utils/kafka";
 import { Publisher, Subscriber } from "./utils/redis";
+import { KafkaProducer, KafkaConsumer } from "./utils/kafka";
 
 env.config();
 
@@ -12,10 +12,14 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer);
 
+// Health check route
 app.get("/", (req, res) => {
-  res.send("Socket server is running");
+  res.status(200).json({ success: true, message: "OK" });
 });
 
+KafkaConsumer();
+
+// Socket.IO events
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
@@ -26,7 +30,6 @@ io.on("connection", (socket) => {
   socket.on("message", async (data) => {
     Publisher.publish("messages", JSON.stringify(data));
     await KafkaProducer(data);
-    console.log("Received message:", data);
   });
 });
 
