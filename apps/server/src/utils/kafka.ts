@@ -2,7 +2,13 @@ import { Kafka, Producer } from "kafkajs";
 
 const kafka = new Kafka({
   clientId: "my-app",
-  brokers: ["kafka:9093"],
+  brokers: ["localhost:29092"],
+  retry: {
+    initialRetryTime: 100,
+    maxRetryTime: 30000,
+    retries: 10,
+    factor: 0.2,
+  },
 });
 
 let producer: null | Producer = null;
@@ -18,7 +24,7 @@ export async function createProducer() {
 
 export const KafkaProducer = async (message: string) => {
   const producer = await createProducer();
-
+  
   await producer.send({
     messages: [{ key: `message-${Date.now()}`, value: message }],
     topic: "MESSAGES",

@@ -25,7 +25,7 @@ io.on("connection", (socket) => {
 
   socket.on("message", async (data) => {
     Publisher.publish("messages", JSON.stringify(data));
-    await KafkaProducer(data.message);
+    await KafkaProducer(data);
     console.log("Received message:", data);
   });
 });
