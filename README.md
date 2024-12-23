@@ -1,81 +1,82 @@
-# Turborepo starter
+# Scaling Node.js Socket.io Server  
 
-This is an official starter Turborepo.
+This project demonstrates a scalable Socket.io server capable of handling a high volume of user connections and real-time communication. The system solves the challenges of horizontal scaling by introducing a message broker to synchronize messages across multiple server instances.  
 
-## Using this example
+---
 
-Run the following command:
+## Problem  
 
-```sh
-npx create-turbo@latest
-```
+As user traffic increases, a single server instance can no longer handle all connections. Horizontal scaling (adding more server instances) creates a new issue:  
+- Users connected to different server instances cannot exchange messages directly, as the servers are isolated.  
 
-## What's inside?
+Here’s an illustration of the problem:  
+![System Problem](./apps/web/public/images/problem.png)  
 
-This Turborepo includes the following packages/apps:
+---
 
-### Apps and Packages
+## Solution  
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+A message broker is integrated into the architecture to synchronize messages between server instances. This setup ensures that users connected to different servers can communicate seamlessly, as if they were on the same instance.
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+![System Architecture](./apps/web/public/images/system.png)  
 
-### Utilities
+### Key Features of the System:  
+- **Real-time synchronization** across server instances.  
+- **Scalable architecture** for handling increased user traffic.  
+- **Reliable message delivery** with no loss, even during server instance failures.  
 
-This Turborepo has some additional tools already setup for you:
+### Technologies Used:  
+- **Node.js** for the server.  
+- **Socket.io** for real-time communication.  
+- **Redis** as the message broker.  
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+---
 
-### Build
+## Additional Problem: Database Write Load  
 
-To build all apps and packages, run the following command:
+When a large number of users send messages, the database write operations can become a bottleneck, significantly impacting performance. A direct approach to updating the database for each message is inefficient and can lead to high latency or crashes under heavy load.  
 
-```
-cd my-turborepo
-pnpm build
-```
+---
 
-### Develop
+## Enhanced Solution: Kafka for Database Updates  
 
-To develop all apps and packages, run the following command:
+To handle the heavy database write load, Kafka, a high-throughput distributed messaging system, was integrated into the architecture.
 
-```
-cd my-turborepo
-pnpm dev
-```
+### How It Works:  
+1. **Message Producer**:  
+   - When a user sends a message, it is added to a Kafka topic named `MESSAGES`.  
 
-### Remote Caching
+2. **Message Consumer**:  
+   - A Kafka consumer listens to the `MESSAGES` topic.  
+   - The consumer processes each message and writes it to the database in an optimized manner.
 
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+3. **Database Write Optimization**:  
+   - Kafka’s high throughput ensures that messages are efficiently queued and processed without overloading the database.  
+   - This architecture enhances both application performance and database reliability.  
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
+---
 
-```
-cd my-turborepo
-npx turbo login
-```
+### Benefits of Kafka Integration:  
+- **High Throughput**: Kafka can handle a large volume of messages per second.  
+- **Reduced Latency**: By batching database writes, latency is minimized.  
+- **Scalability**: Kafka’s distributed nature allows the system to scale easily.  
+- **Fault Tolerance**: Kafka ensures message delivery even in the case of server failures.  
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### Updated Architecture:  
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Client A <--> Server 1
+|
+Client B <--> Server 2
+|
+Redis (Message Broker)
+|
+Kafka (Message Queue)
+|
+Database (Persistent Storage)
 
-```
-npx turbo link
-```
 
-## Useful Links
+---
 
-Learn more about the power of Turborepo:
+## Conclusion  
 
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+By integrating Redis for real-time message synchronization and Kafka for database updates, this system achieves a scalable, efficient, and reliable architecture. It ensures seamless user communication and optimized database operations, even under heavy loads.  
